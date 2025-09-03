@@ -28,7 +28,7 @@ fun EditUserDialog(
     var username by remember { mutableStateOf(user.username) }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var isAdmin by remember { mutableStateOf(user.isAdmin) }
+
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -141,25 +141,7 @@ fun EditUserDialog(
                     )
                 }
                 
-                // Admin role toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = isAdmin,
-                        onCheckedChange = { isAdmin = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = AppTheme.primaryColor
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Admin User",
-                        fontSize = 16.sp,
-                        color = AppTheme.textPrimary
-                    )
-                }
+
                 
                 if (error.isNotEmpty()) {
                     Text(
@@ -215,8 +197,7 @@ fun EditUserDialog(
                             // Update user
                             val updatedUser = user.copy(
                                 username = username,
-                                password = if (password.isNotEmpty()) password else user.password,
-                                isAdmin = isAdmin
+                                password = if (password.isNotEmpty()) password else user.password
                             )
                             
                             val success = UserDao.update(updatedUser)

@@ -4,10 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,15 +63,21 @@ fun ManageUserDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Create New User Option
+                val createUserInteractionSource = remember { MutableInteractionSource() }
+                val isCreateUserHovered by createUserInteractionSource.collectIsHoveredAsState()
+                
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { 
+                        .clickable(
+                            interactionSource = createUserInteractionSource,
+                            indication = null
+                        ) { 
                             onCreateNewUser()
                             onDismiss()
                         },
                     elevation = 4.dp,
-                    backgroundColor = AppTheme.primaryLightColor,
+                    backgroundColor = if (isCreateUserHovered) Color.White.copy(alpha = 0.9f) else Color.White,
                     shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                 ) {
                     Row(
@@ -122,15 +131,21 @@ fun ManageUserDialog(
                 }
                 
                 // Existing User Details Option
+                val existingUserInteractionSource = remember { MutableInteractionSource() }
+                val isExistingUserHovered by existingUserInteractionSource.collectIsHoveredAsState()
+                
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { 
+                        .clickable(
+                            interactionSource = existingUserInteractionSource,
+                            indication = null
+                        ) { 
                             onExistingUserDetails()
                             onDismiss()
                         },
                     elevation = 4.dp,
-                    backgroundColor = AppTheme.primaryLightColor,
+                    backgroundColor = if (isExistingUserHovered) Color.White.copy(alpha = 0.9f) else Color.White,
                     shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                 ) {
                     Row(
