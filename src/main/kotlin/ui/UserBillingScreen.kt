@@ -53,13 +53,46 @@ fun UserBillingScreen(onBack: () -> Unit) {
     
     // Re-focus when cart changes to ensure button is always focused
     LaunchedEffect(cart.size) {
-        generateBillFocusRequester.requestFocus()
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
+    
+    // Re-focus when cart contents change (products added/removed)
+    LaunchedEffect(cart.keys.size) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
+    
+    // Re-focus when any cart item quantity changes
+    LaunchedEffect(cart.values.sum()) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
+    
+    // Re-focus Generate Bill button when dialog closes
+    LaunchedEffect(showBillDialog) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
     }
 
     Row(modifier = Modifier.fillMaxSize()) {
         // Product list
         Column(
-            modifier = Modifier.weight(1f).fillMaxHeight().background(AppTheme.backgroundColor).padding(24.dp),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(AppTheme.backgroundColor)
+                .padding(24.dp)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown && !showBillDialog) {
+                        generateBillFocusRequester.requestFocus()
+                        true
+                    } else false
+                },
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val tileShape = RoundedCornerShape(AppTheme.cornerRadius.dp)
@@ -154,7 +187,7 @@ fun UserBillingScreen(onBack: () -> Unit) {
                 .background(AppTheme.surfaceColor)
                 .padding(24.dp)
                 .onKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
+                    if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown && !showBillDialog) {
                         generateBillFocusRequester.requestFocus()
                         true
                     } else false
@@ -289,7 +322,8 @@ fun UserBillingScreen(onBack: () -> Unit) {
                 products = productDao.getAll() // Refresh product list to update stock
                 showBillDialog = false
             },
-            onDismiss = { showBillDialog = false }
+            onDismiss = { showBillDialog = false },
+            generateBillFocusRequester = generateBillFocusRequester
         )
     }
 }
@@ -299,8 +333,15 @@ fun BillDialog(
     cart: Map<Product, Int>,
     paymentMode: String,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    generateBillFocusRequester: FocusRequester
 ) {
+    val confirmButtonFocusRequester = remember { FocusRequester() }
+    
+    // Auto-focus the Confirm & Print button when dialog opens
+    LaunchedEffect(Unit) {
+        confirmButtonFocusRequester.requestFocus()
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         backgroundColor = AppTheme.surfaceColor,
@@ -346,7 +387,7 @@ fun BillDialog(
                 onClick = onConfirm,
                 modifier = Modifier
                     .focusable(true)
-                    .focusRequester(remember { FocusRequester() })
+                    .focusRequester(confirmButtonFocusRequester)
                     .onKeyEvent { keyEvent ->
                         if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
                             onConfirm()
