@@ -587,7 +587,7 @@ fun generateStatisticsReport(
         val fromDateStr = fromDate.format(formatter)
         val toDateStr = toDate.format(formatter)
         
-        // Create a simple text report
+        // Create a bill-style text report
         val report = buildString {
             appendLine("LAKSHMI MULTIPLEX")
             appendLine("Theatre Canteen")
@@ -603,7 +603,10 @@ fun generateStatisticsReport(
                 stats.forEach { stat ->
                     appendLine("Category: ${stat.categoryName}")
                     stat.products.forEach { prod ->
-                        appendLine("  ${prod.name.padEnd(20)} Qty: ${prod.soldQty.toString().padStart(3)} | ₹${prod.totalAmount}")
+                        val itemName = if (prod.name.length > 15) prod.name.substring(0, 15) else prod.name.padEnd(15)
+                        val qtyStr = prod.soldQty.toString().padStart(3)
+                        val amountStr = "₹${prod.totalAmount.toInt()}".padStart(8)
+                        appendLine("$itemName  $qtyStr    $amountStr")
                     }
                     appendLine()
                 }
@@ -614,27 +617,32 @@ fun generateStatisticsReport(
                 appendLine("-".repeat(32))
                 dailyPayments.forEach { day ->
                     appendLine("${day.date}:")
-                    appendLine("  Cash: ₹${day.cash}")
-                    appendLine("  GPay: ₹${day.gpay}")
-                    appendLine("  Total: ₹${day.total}")
+                    appendLine("  Cash: ₹${day.cash.toInt()}")
+                    appendLine("  GPay: ₹${day.gpay.toInt()}")
+                    appendLine("  Total: ₹${day.total.toInt()}")
                     appendLine()
                 }
             }
             
             appendLine("OVERALL SUMMARY:")
             appendLine("-".repeat(32))
-            appendLine("Total Cash: ₹$overallCash")
-            appendLine("Total GPay: ₹$overallGPay")
-            appendLine("GRAND TOTAL: ₹$overallTotal")
+            appendLine("Total Cash: ₹${overallCash.toInt()}")
+            appendLine("Total GPay: ₹${overallGPay.toInt()}")
+            appendLine("GRAND TOTAL: ₹${overallTotal.toInt()}")
             appendLine()
             appendLine("Thank you!")
         }
         
-        // Print the report using the existing print functionality
+        // Generate PDF and print the report
         PdfBillGenerator.printStatisticsReport(report)
         
+        // Show success message
+        println("✅ Statistics report generated successfully!")
+        println("📄 PDF saved to Documents folder")
+        println("🖨️ Report sent to printer")
+        
     } catch (e: Exception) {
-        println("Error generating statistics report: ${e.message}")
+        println("❌ Error generating statistics report: ${e.message}")
         e.printStackTrace()
     }
 }

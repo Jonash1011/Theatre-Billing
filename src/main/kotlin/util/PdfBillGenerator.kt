@@ -358,9 +358,14 @@ object PdfBillGenerator {
         return cart.entries.sumOf { it.key.price * it.value }
     }
 
-    // Function to print statistics report
+    // Function to generate PDF and print statistics report
     fun printStatisticsReport(report: String) {
         try {
+            // First, generate and save PDF file
+            val pdfPath = generateStatisticsPdf(report)
+            println("Statistics report PDF saved to: $pdfPath")
+            
+            // Then print to printer
             val printerJob = PrinterJob.getPrinterJob()
 
             // Try to find a thermal printer
@@ -403,13 +408,108 @@ object PdfBillGenerator {
                 printerJob.print(attributes)
                 println("Statistics report printed successfully on: ${selectedPrinter.name}")
             } else {
-                println("No printer found. Statistics report could not be printed.")
+                println("No printer found. PDF saved to: $pdfPath")
             }
 
-        } catch (e: PrinterException) {
-            println("Printing statistics report failed: ${e.message}")
+        } catch (e: Exception) {
+            println("Error generating/printing statistics report: ${e.message}")
             e.printStackTrace()
         }
+    }
+
+    // Function to generate PDF file for statistics report
+    private fun generateStatisticsPdf(report: String): String {
+        val documentsDir = System.getProperty("user.home") + java.io.File.separator + "Documents"
+        val timestamp = System.currentTimeMillis()
+        val pdfFile = java.io.File(documentsDir, "sales_statistics_report_$timestamp.pdf")
+
+        // Create document with custom size similar to bill format
+        val pageSize = Rectangle(280f, 800f) // Similar to bill width but taller for reports
+        val document = Document(pageSize, 20f, 20f, 20f, 20f)
+
+        try {
+            PdfWriter.getInstance(document, FileOutputStream(pdfFile))
+            document.open()
+
+            // Split report into lines
+            val lines = report.split("\n")
+            
+            lines.forEach { line ->
+                when {
+                    line.contains("LAKSHMI MULTIPLEX") -> {
+                        val titleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 10f, com.lowagie.text.Font.BOLD)
+                        val titlePara = Paragraph(line, titleFont)
+                        titlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
+                        document.add(titlePara)
+                    }
+                    line.contains("Theatre Canteen") -> {
+                        val subtitleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val subtitlePara = Paragraph(line, subtitleFont)
+                        subtitlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
+                        document.add(subtitlePara)
+                    }
+                    line.contains("Sales Statistics Report") -> {
+                        val reportTitleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val reportTitlePara = Paragraph(line, reportTitleFont)
+                        reportTitlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
+                        document.add(reportTitlePara)
+                    }
+                    line.contains("=") -> {
+                        val separatorFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val separatorPara = Paragraph(line, separatorFont)
+                        document.add(separatorPara)
+                    }
+                    line.contains("-") && line.length > 10 -> {
+                        val separatorFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val separatorPara = Paragraph(line, separatorFont)
+                        document.add(separatorPara)
+                    }
+                    line.contains("Period:") || line.contains("Generated:") -> {
+                        val infoFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val infoPara = Paragraph(line, infoFont)
+                        document.add(infoPara)
+                    }
+                    line.contains("Category:") -> {
+                        val categoryFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val categoryPara = Paragraph(line, categoryFont)
+                        document.add(categoryPara)
+                    }
+                    line.contains("OVERALL SUMMARY:") || line.contains("DAILY PAYMENT BREAKDOWN:") -> {
+                        val headerFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val headerPara = Paragraph(line, headerFont)
+                        document.add(headerPara)
+                    }
+                    line.contains("GRAND TOTAL:") -> {
+                        val totalFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val totalPara = Paragraph(line, totalFont)
+                        document.add(totalPara)
+                    }
+                    line.trim().isEmpty() -> {
+                        document.add(Paragraph(" "))
+                    }
+                    else -> {
+                        val normalFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f)
+                        val normalPara = Paragraph(line, normalFont)
+                        document.add(normalPara)
+                    }
+                }
+            }
+
+            // Add footer
+            document.add(Paragraph(" "))
+            val footerFont = com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 7f, com.lowagie.text.Font.ITALIC)
+            val footer = Paragraph("Thank you!", footerFont)
+            footer.alignment = com.lowagie.text.Element.ALIGN_CENTER
+            document.add(footer)
+
+        } catch (e: DocumentException) {
+            e.printStackTrace()
+            throw e
+        } finally {
+            document.close()
+        }
+
+        return pdfFile.absolutePath
     }
 
     private class StatisticsReportPrintable(
@@ -441,22 +541,51 @@ object PdfBillGenerator {
                 g2d.drawString(text, leftMargin, yPos)
             }
 
-            // Split report into lines and print each line
+            // Split report into lines and print each line with bill-style formatting
             val lines = report.split("\n")
             lines.forEach { line ->
-                if (line.contains("LAKSHMI MULTIPLEX") || line.contains("Sales Statistics Report")) {
-                    drawCenteredText(line, Font("Monospaced", Font.BOLD, 12), y)
-                } else if (line.contains("=") || line.contains("-")) {
-                    drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
-                } else if (line.contains("Category:") || line.contains("OVERALL SUMMARY:") || line.contains("DAILY PAYMENT BREAKDOWN:")) {
-                    drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
-                } else if (line.contains("GRAND TOTAL:")) {
-                    drawLeftText(line, Font("Monospaced", Font.BOLD, 11), y)
-                } else {
-                    drawLeftText(line, Font("Monospaced", Font.PLAIN, 9), y)
+                when {
+                    line.contains("LAKSHMI MULTIPLEX") -> {
+                        drawCenteredText(line, Font("Monospaced", Font.BOLD, 14), y)
+                    }
+                    line.contains("Theatre Canteen") -> {
+                        drawCenteredText(line, Font("Monospaced", Font.BOLD, 11), y)
+                    }
+                    line.contains("Sales Statistics Report") -> {
+                        drawCenteredText(line, Font("Monospaced", Font.BOLD, 11), y)
+                    }
+                    line.contains("=") -> {
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
+                    }
+                    line.contains("-") && line.length > 10 -> {
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
+                    }
+                    line.contains("Period:") || line.contains("Generated:") -> {
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
+                    }
+                    line.contains("Category:") -> {
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
+                    }
+                    line.contains("OVERALL SUMMARY:") || line.contains("DAILY PAYMENT BREAKDOWN:") -> {
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
+                    }
+                    line.contains("GRAND TOTAL:") -> {
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 11), y)
+                    }
+                    line.trim().isEmpty() -> {
+                        // Skip empty lines or add minimal spacing
+                        y += 4
+                    }
+                    else -> {
+                        drawLeftText(line, Font("Monospaced", Font.PLAIN, 9), y)
+                    }
                 }
                 y += lineHeight
             }
+
+            // Add footer like in the bill
+            y += lineHeight
+            drawCenteredText("Thank you!", Font("Monospaced", Font.ITALIC, 10), y)
 
             return Printable.PAGE_EXISTS
         }
