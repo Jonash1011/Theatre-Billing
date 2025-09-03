@@ -24,6 +24,9 @@ object Database {
     private fun initializeTables(conn: Connection) {
         try {
             conn.createStatement().executeUpdate(
+                "CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, isAdmin BOOLEAN NOT NULL DEFAULT 0)"
+            )
+            conn.createStatement().executeUpdate(
                 "CREATE TABLE IF NOT EXISTS category (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE)"
             )
             conn.createStatement().executeUpdate(
@@ -37,6 +40,22 @@ object Database {
             try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN dateTime TEXT") } catch (e: Exception) { println("dateTime column: ${e.message}") }
             try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN price REAL") } catch (e: Exception) { println("price column: ${e.message}") }
             try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN timestamp DATETIME DEFAULT CURRENT_TIMESTAMP") } catch (e: Exception) { println("timestamp column: ${e.message}") }
+            
+            // Create default admin user if no users exist
+            try {
+                val userCheck = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM user")
+                val userCount = if (userCheck.next()) userCheck.getInt("count") else 0
+                userCheck.close()
+                
+                if (userCount == 0) {
+                    conn.createStatement().executeUpdate(
+                        "INSERT INTO user (username, password, isAdmin) VALUES ('admin', 'password123', 1)"
+                    )
+                    println("Default admin user created")
+                }
+            } catch (e: Exception) {
+                println("Error creating default admin user: ${e.message}")
+            }
         } catch (e: Exception) {
             println("Table creation error: ${e.message}")
             // Do not throw, allow app to open

@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.IconButton
-import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -26,21 +24,22 @@ import org.example.ui.theme.AppTheme
 import org.example.data.UserDao
 
 @Composable
-fun AdminLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
+fun UserLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val passwordFocusRequester = remember { FocusRequester() }
+    val loginButtonFocusRequester = remember { FocusRequester() }
 
     // Function to handle login
     fun performLogin() {
         val user = UserDao.getByUsername(username)
-        if (user != null && user.password == password && user.isAdmin) {
+        if (user != null && user.password == password && !user.isAdmin) {
             error = ""
             onLoginSuccess()
         } else {
-            error = "Invalid credentials or insufficient privileges."
+            error = "Invalid credentials or user not found."
         }
     }
 
@@ -62,7 +61,7 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
                 modifier = Modifier.padding(24.dp)
             ) {
                 Text(
-                    "Admin Login",
+                    "User Login",
                     fontSize = MaterialTheme.typography.h5.fontSize,
                     fontWeight = FontWeight.Bold,
                     color = AppTheme.primaryColor
@@ -74,10 +73,6 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
                         username = newValue
                         error = ""
                     },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = {
-                        passwordFocusRequester.requestFocus()
-                    }),
                     label = { Text("Username") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -86,8 +81,15 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
                         cursorColor = AppTheme.primaryColor,
                         focusedLabelColor = AppTheme.primaryColor,
                         unfocusedBorderColor = Color.Gray,
-                        backgroundColor = Color.White,
-                        unfocusedLabelColor = Color.Gray
+                        backgroundColor = Color.White
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            passwordFocusRequester.requestFocus()
+                        }
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
                     )
                 )
                 OutlinedTextField(
@@ -104,8 +106,7 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
                         cursorColor = AppTheme.primaryColor,
                         focusedLabelColor = AppTheme.primaryColor,
                         unfocusedBorderColor = Color.Gray,
-                        backgroundColor = Color.White,
-                        unfocusedLabelColor = Color.Gray
+                        backgroundColor = Color.White
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,7 +116,9 @@ fun AdminLoginScreen(onLoginSuccess: () -> Unit, onBack: () -> Unit) {
                             performLogin()
                         }
                     ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
