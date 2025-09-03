@@ -36,8 +36,8 @@ compose.desktop {
             )
             packageName = "LACS_Cinemas"
             packageVersion = "1.0.0"
-            description = "LACS Cinemas Theatre Canteen Billing Application"
-            vendor = "LACS Cinemas"
+            description = "Lakshmi Multiplex Theatre Canteen Billing Application"
+            vendor = "Lakshmi Multiplex"
             
             // Include all runtime dependencies
             includeAllModules = true
@@ -53,7 +53,7 @@ compose.desktop {
                 console = false
                 dirChooser = true
                 perUserInstall = false
-                menuGroup = "LACS Cinemas"
+                menuGroup = "Lakshmi Multiplex"
                 upgradeUuid = "61DAB35E-17CB-43B8-A18C-05CFCF57B6B6"
             }
         }

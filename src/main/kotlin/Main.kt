@@ -18,6 +18,7 @@ import androidx.compose.ui.window.*
 import org.example.ui.AdminLoginScreen
 import org.example.ui.ProductListScreen
 import org.example.ui.UserBillingScreen
+import org.example.ui.UserLoginScreen
 
 @Composable
 @Preview
@@ -39,7 +40,7 @@ fun App() {
                                 contentAlignment = Alignment.TopCenter
                             ) {
                                 Text(
-                                    "LACS Cinemas",
+                                    "Lakshmi Multiplex",
                                     fontSize = 56.sp,
                                     fontWeight = FontWeight.Black,
                                     color = org.example.ui.theme.AppTheme.primaryDarkColor,
@@ -52,7 +53,7 @@ fun App() {
                             Spacer(modifier = Modifier.height(32.dp))
                             HomeScreen(
                                 onAdminClick = { screen = "adminLogin" },
-                                onUserClick = { screen = "userBilling" }
+                                onUserClick = { screen = "userLogin" }
                             )
                         }
                         "adminLogin" -> AdminLoginScreen(
@@ -60,6 +61,10 @@ fun App() {
                             onBack = { screen = "home" }
                         )
                         "productList" -> ProductListScreen(onLogout = { screen = "home" })
+                        "userLogin" -> UserLoginScreen(
+                            onLoginSuccess = { screen = "userBilling" },
+                            onBack = { screen = "home" }
+                        )
                         "userBilling" -> UserBillingScreen(onBack = { screen = "home" })
                     }
                 }

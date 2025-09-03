@@ -4,10 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
+
+
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
@@ -32,18 +37,69 @@ fun UserBillingScreen(onBack: () -> Unit) {
     val cart = remember { mutableStateMapOf<Product, Int>() }
     var paymentMode by remember { mutableStateOf("Cash") }
     var showBillDialog by remember { mutableStateOf(false) }
+    val generateBillFocusRequester = remember { FocusRequester() }
+    
+    // Function to handle bill generation
+    fun generateBill() {
+        if (cart.isNotEmpty()) {
+            showBillDialog = true
+        }
+    }
+    
+    // Auto-focus the Generate Bill button when screen loads and whenever cart changes
+    LaunchedEffect(Unit) {
+        generateBillFocusRequester.requestFocus()
+    }
+    
+    // Re-focus when cart changes to ensure button is always focused
+    LaunchedEffect(cart.size) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
+    
+    // Re-focus when cart contents change (products added/removed)
+    LaunchedEffect(cart.keys.size) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
+    
+    // Re-focus when any cart item quantity changes
+    LaunchedEffect(cart.values.sum()) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
+    
+    // Re-focus Generate Bill button when dialog closes
+    LaunchedEffect(showBillDialog) {
+        if (!showBillDialog) {
+            generateBillFocusRequester.requestFocus()
+        }
+    }
 
     Row(modifier = Modifier.fillMaxSize()) {
         // Product list
         Column(
-            modifier = Modifier.weight(1f).fillMaxHeight().background(AppTheme.backgroundColor).padding(24.dp),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(AppTheme.backgroundColor)
+                .padding(24.dp)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown && !showBillDialog) {
+                        generateBillFocusRequester.requestFocus()
+                        true
+                    } else false
+                },
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val tileShape = RoundedCornerShape(AppTheme.cornerRadius.dp)
             val tileElevation = AppTheme.cardElevation.dp
-            val tileBg = AppTheme.cardColor
-            val tileBgHover = AppTheme.primaryLightColor
-            val tileBgOutOfStock = AppTheme.errorColor.copy(alpha = 0.3f)
+            val tileBg = Color.White // White background for available products
+
+            val tileBgOutOfStock = Color.White // White background for out of stock products
             val tileTextColor = AppTheme.textPrimary
             val tileTextOutOfStock = AppTheme.errorColor
             val tilePadding = 12.dp
@@ -61,22 +117,23 @@ fun UserBillingScreen(onBack: () -> Unit) {
                         val isOutOfStock = product.stock <= 0
                         val cartQty = cart[product] ?: 0
                         val canAdd = product.stock > cartQty
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isHovered by interactionSource.collectIsHoveredAsState()
                         Card(
                             shape = tileShape,
                             elevation = tileElevation,
                             backgroundColor = when {
                                 isOutOfStock -> tileBgOutOfStock
-                                isHovered -> tileBgHover
                                 else -> tileBg
                             },
+                            border = BorderStroke(
+                                width = 2.dp,
+                                color = if (isOutOfStock) Color.Red else Color(0xFF006400) // Dark green border for available, red for out of stock
+                            ),
                             modifier = Modifier
                                 .weight(1f)
                                 .height(120.dp)
                                 .padding(vertical = 4.dp)
                                 .let {
-                                    if (!canAdd) it else it.clickable(interactionSource = interactionSource, indication = null) {
+                                    if (!canAdd) it else it.clickable {
                                         if (canAdd) {
                                             cart[product] = cartQty + 1
                                         }
@@ -124,7 +181,17 @@ fun UserBillingScreen(onBack: () -> Unit) {
         }
         // Cart summary with fixed bottom actions
         Box(
-            modifier = Modifier.weight(1f).fillMaxHeight().background(AppTheme.surfaceColor).padding(24.dp)
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(AppTheme.surfaceColor)
+                .padding(24.dp)
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown && !showBillDialog) {
+                        generateBillFocusRequester.requestFocus()
+                        true
+                    } else false
+                }
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Text("Cart", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = AppTheme.primaryColor)
@@ -200,10 +267,17 @@ fun UserBillingScreen(onBack: () -> Unit) {
                     }
                     Spacer(Modifier.height(16.dp))
                     Button(
-                        onClick = {
-                            if (cart.isNotEmpty()) showBillDialog = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { generateBill() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusable(true)
+                            .focusRequester(generateBillFocusRequester)
+                            .onKeyEvent { keyEvent ->
+                                if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
+                                    generateBill()
+                                    true
+                                } else false
+                            },
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = AppTheme.accentColor,
                             contentColor = AppTheme.textOnPrimary
@@ -248,7 +322,8 @@ fun UserBillingScreen(onBack: () -> Unit) {
                 products = productDao.getAll() // Refresh product list to update stock
                 showBillDialog = false
             },
-            onDismiss = { showBillDialog = false }
+            onDismiss = { showBillDialog = false },
+            generateBillFocusRequester = generateBillFocusRequester
         )
     }
 }
@@ -258,8 +333,15 @@ fun BillDialog(
     cart: Map<Product, Int>,
     paymentMode: String,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    generateBillFocusRequester: FocusRequester
 ) {
+    val confirmButtonFocusRequester = remember { FocusRequester() }
+    
+    // Auto-focus the Confirm & Print button when dialog opens
+    LaunchedEffect(Unit) {
+        confirmButtonFocusRequester.requestFocus()
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         backgroundColor = AppTheme.surfaceColor,
@@ -303,6 +385,15 @@ fun BillDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
+                modifier = Modifier
+                    .focusable(true)
+                    .focusRequester(confirmButtonFocusRequester)
+                    .onKeyEvent { keyEvent ->
+                        if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
+                            onConfirm()
+                            true
+                        } else false
+                    },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = AppTheme.accentColor,
                     contentColor = AppTheme.textOnPrimary

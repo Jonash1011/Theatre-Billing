@@ -6,10 +6,12 @@ import androidx.compose.material.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.example.data.Category
 import org.example.data.Product
 import org.example.ui.theme.AppTheme
@@ -27,6 +29,8 @@ fun EditDeleteProductDialog(
     var stock by remember { mutableStateOf(product.stock.toString()) }
     var selectedCategory by remember { mutableStateOf(product.categoryId) }
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
+    var showStockIncreaseDialog by remember { mutableStateOf(false) }
+    var stockIncreaseAmount by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -66,7 +70,21 @@ fun EditDeleteProductDialog(
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = AppTheme.primaryColor,
                         cursorColor = AppTheme.primaryColor
-                    )
+                    ),
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { 
+                                showStockIncreaseDialog = true
+                                stockIncreaseAmount = ""
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Increase Stock",
+                                tint = AppTheme.primaryColor
+                            )
+                        }
+                    }
                 )
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
@@ -139,4 +157,71 @@ fun EditDeleteProductDialog(
             ) { Text("Cancel") }
         }
     )
+
+    // Stock Increase Dialog
+    if (showStockIncreaseDialog) {
+        AlertDialog(
+            onDismissRequest = { showStockIncreaseDialog = false },
+            backgroundColor = AppTheme.surfaceColor,
+            shape = RoundedCornerShape(AppTheme.cornerRadius.dp),
+            title = { 
+                Text(
+                    "Increase Stock", 
+                    fontWeight = FontWeight.Bold, 
+                    color = AppTheme.primaryColor
+                ) 
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.width(280.dp)
+                ) {
+                    Text(
+                        "Current Stock: ${stock}",
+                        fontSize = 14.sp,
+                        color = AppTheme.textSecondary
+                    )
+                    OutlinedTextField(
+                        value = stockIncreaseAmount,
+                        onValueChange = { stockIncreaseAmount = it },
+                        label = { Text("Amount to Add") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = AppTheme.primaryColor,
+                            cursorColor = AppTheme.primaryColor
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val increaseAmount = stockIncreaseAmount.toIntOrNull() ?: 0
+                        if (increaseAmount > 0) {
+                            val currentStock = stock.toIntOrNull() ?: 0
+                            val newStock = currentStock + increaseAmount
+                            stock = newStock.toString()
+                            showStockIncreaseDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = AppTheme.primaryColor,
+                        contentColor = AppTheme.textOnPrimary
+                    )
+                ) { 
+                    Text("Add Stock") 
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showStockIncreaseDialog = false },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = AppTheme.primaryColor
+                    )
+                ) { 
+                    Text("Cancel") 
+                }
+            }
+        )
+    }
 }

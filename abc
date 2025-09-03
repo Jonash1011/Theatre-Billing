@@ -1,0 +1,23 @@
+    // Corrected paper size for EPSON TM-T82X (79.5mm width)
+    private val BILL_WIDTH = 225.4f // 79.5mm in points (79.5 * 2.834645669)
+    private val BILL_HEIGHT = 800f // Adjust height as needed
+    private val MAX_CHARS_PER_LINE = 40 // Further reduced to ensure no cutoff
+    private val FULL_WIDTH_LINE = "=".repeat(MAX_CHARS_PER_LINE)
+
+
+
+
+        
+    // Corrected paper size for EPSON TM-T82X (79.5mm width)
+    private val BILL_WIDTH = 225.4f // 79.5mm in points (79.5 * 2.834645669)
+    private val BILL_HEIGHT = 800f // Adjust height as needed
+    private val MAX_CHARS_PER_LINE = 35 // Reduced to prevent cutoff
+    private val FULL_WIDTH_LINE = "=".repeat(MAX_CHARS_PER_LINE)
+
+
+        
+    // Corrected paper size for EPSON TM-T82X (79.5mm width)
+    private val BILL_WIDTH = 225.4f // 79.5mm in points (79.5 * 2.834645669)
+    private val BILL_HEIGHT = 800f // Adjust height as needed
+    private val MAX_CHARS_PER_LINE = 48 // Thermal printers typically handle 48 chars
+    private val FULL_WIDTH_LINE = "=".repeat(MAX_CHARS_PER_LINE)
