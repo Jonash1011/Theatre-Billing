@@ -76,7 +76,7 @@ fun StatisticDialog(
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text(
-                        "Sales Statistics",
+                        " ",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.textOnPrimary
@@ -177,22 +177,14 @@ fun StatisticDialog(
                     // Show Statistics Button
                     Button(
                         onClick = {
-                            // Get the latest sales date and extend the range if needed
-                            val latestSalesDate = getLatestSalesDate()
-                            val actualToDate = if (latestSalesDate != null && latestSalesDate.isAfter(toDate)) {
-                                latestSalesDate
-                            } else {
-                                toDate
-                            }
-                            
-                            stats = getCategoryStats(fromDate, actualToDate, categories)
-                            val payments = getDailyPaymentStats(fromDate, actualToDate)
+                            stats = getCategoryStats(fromDate, toDate, categories)
+                            val payments = getDailyPaymentStats(fromDate, toDate)
                             dailyPayments = payments
                             overallCash = payments.sumOf { it.cash }
                             overallGPay = payments.sumOf { it.gpay }
                             overallTotal = payments.sumOf { it.total }
                             showStats = true
-                        }, 
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = AppTheme.accentColor,
@@ -527,10 +519,9 @@ fun getCategoryStats(from: LocalDate, to: LocalDate, categories: List<Category>)
     val productDao = ProductDao()
     val products = productDao.getAll()
     val purchases = PurchaseDao.getAll()
-    val fromStr = from.toString()
-    val toStr = to.toString()
     val filteredPurchases = purchases.filter {
-        it.dateTime >= fromStr && it.dateTime <= toStr
+        val purchaseDate = LocalDate.parse(it.dateTime.substring(0, 10))
+        !purchaseDate.isBefore(from) && !purchaseDate.isAfter(to)
     }
     return categories.map { cat ->
         val catProducts = products.filter { it.categoryId == cat.id }
@@ -560,9 +551,10 @@ fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat>
     val purchases = PurchaseDao.getAll()
     val productDao = ProductDao()
     val products = productDao.getAll().associateBy { it.id }
-    val fromStr = from.toString()
-    val toStr = to.toString()
-    val filtered = purchases.filter { it.dateTime >= fromStr && it.dateTime <= toStr }
+    val filtered = purchases.filter {
+        val purchaseDate = LocalDate.parse(it.dateTime.substring(0, 10))
+        !purchaseDate.isBefore(from) && !purchaseDate.isAfter(to)
+    }
     val grouped = filtered.groupBy { it.dateTime.substring(0, 10) }
     return grouped.map { (date, list) ->
         val cash = list.filter { it.paymentMode == "Cash" }.sumOf { (products[it.productId]?.price ?: 0.0) * it.quantity }

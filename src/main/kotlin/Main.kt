@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,6 +20,8 @@ import org.example.ui.AdminLoginScreen
 import org.example.ui.ProductListScreen
 import org.example.ui.UserBillingScreen
 import org.example.ui.UserLoginScreen
+import androidx.compose.ui.res.useResource
+import androidx.compose.ui.res.loadImageBitmap
 
 @Composable
 @Preview
@@ -118,7 +121,8 @@ fun Tile(text: String, onClick: () -> Unit) {
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "Theatre Canteen Billing",
+        title = "LT POS",
+        icon = BitmapPainter(useResource("Logo.jpg", ::loadImageBitmap)),
         state = rememberWindowState(placement = WindowPlacement.Fullscreen)
     ) {
         App()
