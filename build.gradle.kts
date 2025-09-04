@@ -34,7 +34,7 @@ compose.desktop {
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe
             )
-            packageName = "LACS_Cinemas"
+            packageName = "LT POS"
             packageVersion = "1.0.0"
             description = "Lakshmi Multiplex Theatre Canteen Billing Application"
             vendor = "Lakshmi Multiplex"

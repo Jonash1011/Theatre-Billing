@@ -76,7 +76,7 @@ fun StatisticDialog(
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text(
-                        "Sales Statistics",
+                        " ",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppTheme.textOnPrimary
