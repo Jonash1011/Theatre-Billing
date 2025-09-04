@@ -15,6 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -107,76 +110,74 @@ fun UserBillingScreen(onBack: () -> Unit) {
 
             Text("Select Products", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = tileTextColor)
             Spacer(Modifier.height(16.dp))
-            val rows = products.chunked(3)
-            rows.forEach { rowProducts ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(tileSpacing)
-                ) {
-                    rowProducts.forEach { product ->
-                        val isOutOfStock = product.stock <= 0
-                        val cartQty = cart[product] ?: 0
-                        val canAdd = product.stock > cartQty
-                        Card(
-                            shape = tileShape,
-                            elevation = tileElevation,
-                            backgroundColor = when {
-                                isOutOfStock -> tileBgOutOfStock
-                                else -> tileBg
-                            },
-                            border = BorderStroke(
-                                width = 2.dp,
-                                color = if (isOutOfStock) Color.Red else Color(0xFF006400) // Dark green border for available, red for out of stock
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(120.dp)
-                                .padding(vertical = 4.dp)
-                                .let {
-                                    if (!canAdd) it else it.clickable {
-                                        if (canAdd) {
-                                            cart[product] = cartQty + 1
-                                        }
+            
+            // Scrollable product grid
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(tileSpacing),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(products) { product ->
+                    val isOutOfStock = product.stock <= 0
+                    val cartQty = cart[product] ?: 0
+                    val canAdd = product.stock > cartQty
+                    Card(
+                        shape = tileShape,
+                        elevation = tileElevation,
+                        backgroundColor = when {
+                            isOutOfStock -> tileBgOutOfStock
+                            else -> tileBg
+                        },
+                        border = BorderStroke(
+                            width = 2.dp,
+                            color = if (isOutOfStock) Color.Red else Color(0xFF006400) // Dark green border for available, red for out of stock
+                        ),
+                        modifier = Modifier
+                            .height(120.dp)
+                            .let {
+                                if (!canAdd) it else it.clickable {
+                                    if (canAdd) {
+                                        cart[product] = cartQty + 1
                                     }
-                                },
+                                }
+                            },
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(tilePadding),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.Start
                         ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize().padding(tilePadding),
-                                verticalArrangement = Arrangement.SpaceBetween,
-                                horizontalAlignment = Alignment.Start
+                            Text(product.name, 
+                                fontSize = 18.sp, 
+                                fontWeight = FontWeight.Bold, 
+                                color = if (isOutOfStock) tileTextOutOfStock else tileTextColor
+                            )
+                            Text("Price: ₹${product.price}", 
+                                fontSize = 14.sp, 
+                                color = AppTheme.textSecondary
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(product.name, 
-                                    fontSize = 18.sp, 
-                                    fontWeight = FontWeight.Bold, 
+                                Text("Stock: ${product.stock}", 
+                                    fontSize = 14.sp, 
                                     color = if (isOutOfStock) tileTextOutOfStock else tileTextColor
                                 )
-                                Text("Price: ₹${product.price}", 
-                                    fontSize = 14.sp, 
-                                    color = AppTheme.textSecondary
-                                )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Stock: ${product.stock}", 
-                                        fontSize = 14.sp, 
-                                        color = if (isOutOfStock) tileTextOutOfStock else tileTextColor
+                                if (canAdd && !isOutOfStock) {
+                                    Text(
+                                        "+",
+                                        color = AppTheme.accentColor,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
                                     )
-                                    if (canAdd && !isOutOfStock) {
-                                        Text(
-                                            "+",
-                                            color = AppTheme.accentColor,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp
-                                        )
-                                    }
                                 }
                             }
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
             }
         }
         // Cart summary with fixed bottom actions
