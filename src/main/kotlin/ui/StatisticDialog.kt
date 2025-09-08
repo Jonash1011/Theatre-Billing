@@ -19,6 +19,7 @@ import org.example.data.Category
 import org.example.data.ProductDao
 import org.example.data.PurchaseDao
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.example.ui.theme.AppTheme
 import org.example.util.PdfBillGenerator
@@ -519,9 +520,18 @@ fun getCategoryStats(from: LocalDate, to: LocalDate, categories: List<Category>)
     val productDao = ProductDao()
     val products = productDao.getAll()
     val purchases = PurchaseDao.getAll()
-    val filteredPurchases = purchases.filter {
-        val purchaseDate = LocalDate.parse(it.dateTime.substring(0, 10))
-        !purchaseDate.isBefore(from) && !purchaseDate.isAfter(to)
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val businessDays = mutableListOf<Pair<LocalDateTime, LocalDateTime>>()
+    var day = from
+    while (!day.isAfter(to)) {
+        val start = day.atTime(6, 0, 0)
+        val end = day.plusDays(1).atTime(5, 59, 59)
+        businessDays.add(start to end)
+        day = day.plusDays(1)
+    }
+    val filteredPurchases = purchases.filter { purchase ->
+        val purchaseDateTime = try { LocalDateTime.parse(purchase.dateTime, formatter) } catch (e: Exception) { null }
+        purchaseDateTime != null && businessDays.any { (start, end) -> !purchaseDateTime.isBefore(start) && !purchaseDateTime.isAfter(end) }
     }
     return categories.map { cat ->
         val catProducts = products.filter { it.categoryId == cat.id }
@@ -551,17 +561,31 @@ fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat>
     val purchases = PurchaseDao.getAll()
     val productDao = ProductDao()
     val products = productDao.getAll().associateBy { it.id }
-    val filtered = purchases.filter {
-        val purchaseDate = LocalDate.parse(it.dateTime.substring(0, 10))
-        !purchaseDate.isBefore(from) && !purchaseDate.isAfter(to)
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val businessDays = mutableListOf<Pair<LocalDateTime, LocalDateTime>>()
+    var day = from
+    while (!day.isAfter(to)) {
+        val start = day.atTime(6, 0, 0)
+        val end = day.plusDays(1).atTime(5, 59, 59)
+        businessDays.add(start to end)
+        day = day.plusDays(1)
     }
-    val grouped = filtered.groupBy { it.dateTime.substring(0, 10) }
-    return grouped.map { (date, list) ->
+    val filtered = purchases.filter { purchase ->
+        val purchaseDateTime = try { LocalDateTime.parse(purchase.dateTime, formatter) } catch (e: Exception) { null }
+        purchaseDateTime != null && businessDays.any { (start, end) -> !purchaseDateTime.isBefore(start) && !purchaseDateTime.isAfter(end) }
+    }
+    // Group by business day start date
+    val grouped = businessDays.map { (start, end) ->
+        val list = filtered.filter { purchase ->
+            val purchaseDateTime = try { LocalDateTime.parse(purchase.dateTime, formatter) } catch (e: Exception) { null }
+            purchaseDateTime != null && !purchaseDateTime.isBefore(start) && !purchaseDateTime.isAfter(end)
+        }
         val cash = list.filter { it.paymentMode == "Cash" }.sumOf { (products[it.productId]?.price ?: 0.0) * it.quantity }
         val gpay = list.filter { it.paymentMode == "GPay" }.sumOf { (products[it.productId]?.price ?: 0.0) * it.quantity }
         val total = cash + gpay
-        DailyPaymentStat(date, cash, gpay, total)
-    }.sortedBy { it.date }
+        DailyPaymentStat(start.toLocalDate().toString(), cash, gpay, total)
+    }
+    return grouped.filter { it.total > 0 }
 }
 
 // Function to generate and print statistics report

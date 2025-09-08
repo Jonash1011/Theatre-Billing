@@ -15,6 +15,8 @@ import androidx.compose.ui.window.DialogProperties
 import org.example.data.Category
 import org.example.data.CategoryDao
 import org.example.ui.theme.AppTheme
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 @Composable
 fun CategoryDialog(onDismiss: () -> Unit) {
@@ -50,79 +52,86 @@ fun CategoryDialog(onDismiss: () -> Unit) {
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 20.dp)
                 )
-                
-                // Category list
-                if (categories.isEmpty()) {
-                    Box(
-                        contentAlignment = Alignment.Center,
+                Box(modifier = Modifier.weight(1f, fill = true)) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 24.dp)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            "No categories found. Add one below.",
-                            color = AppTheme.textSecondary,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        categories.forEach { cat ->
-                            Card(
-                                elevation = 4.dp,
-                                backgroundColor = AppTheme.surfaceColor,
-                                shape = RoundedCornerShape(AppTheme.cornerRadius.dp),
+                        if (categories.isEmpty()) {
+                            Box(
+                                contentAlignment = Alignment.Center,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .border(
-                                        width = 1.dp,
-                                        color = AppTheme.primaryLightColor.copy(alpha = 0.3f),
-                                        shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                    )
+                                    .padding(vertical = 24.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp, horizontal = 16.dp)
-                                ) {
-                                    Text(
-                                        cat.name,
-                                        modifier = Modifier.weight(1f),
-                                        color = AppTheme.textPrimary,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                Text(
+                                    "No categories found. Add one below.",
+                                    color = AppTheme.textSecondary,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                categories.forEach { cat ->
+                                    Card(
+                                        elevation = 4.dp,
+                                        backgroundColor = AppTheme.surfaceColor,
+                                        shape = RoundedCornerShape(AppTheme.cornerRadius.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(
+                                                width = 1.dp,
+                                                color = AppTheme.primaryLightColor.copy(alpha = 0.3f),
+                                                shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                            )
                                     ) {
-                                        OutlinedButton(
-                                            onClick = { showAddDialog = true; newCategoryName = cat.name },
-                                            colors = ButtonDefaults.outlinedButtonColors(
-                                                contentColor = AppTheme.primaryColor
-                                            ),
-                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                        ) { 
-                                            Text("Edit") 
-                                        }
-                                        Button(
-                                            onClick = {
-                                                dao.delete(cat.id)
-                                                categories = dao.getAll()
-                                            },
-                                            colors = ButtonDefaults.buttonColors(
-                                                backgroundColor = AppTheme.errorColor,
-                                                contentColor = AppTheme.textOnPrimary
-                                            ),
-                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                        ) { 
-                                            Text("Delete") 
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 12.dp, horizontal = 16.dp)
+                                        ) {
+                                            Text(
+                                                cat.name,
+                                                modifier = Modifier.weight(1f),
+                                                color = AppTheme.textPrimary,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                OutlinedButton(
+                                                    onClick = { showAddDialog = true; newCategoryName = cat.name },
+                                                    colors = ButtonDefaults.outlinedButtonColors(
+                                                        contentColor = AppTheme.primaryColor
+                                                    ),
+                                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                ) { 
+                                                    Text("Edit") 
+                                                }
+                                                Button(
+                                                    onClick = {
+                                                        dao.delete(cat.id)
+                                                        categories = dao.getAll()
+                                                    },
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        backgroundColor = AppTheme.errorColor,
+                                                        contentColor = AppTheme.textOnPrimary
+                                                    ),
+                                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                ) { 
+                                                    Text("Delete") 
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -130,8 +139,6 @@ fun CategoryDialog(onDismiss: () -> Unit) {
                         }
                     }
                 }
-                
-                // Divider and Add Button
                 Divider(
                     color = AppTheme.primaryLightColor.copy(alpha = 0.3f),
                     thickness = 1.dp,

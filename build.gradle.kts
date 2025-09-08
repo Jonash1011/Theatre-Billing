@@ -55,6 +55,7 @@ compose.desktop {
                 perUserInstall = false
                 menuGroup = "Lakshmi Multiplex"
                 upgradeUuid = "61DAB35E-17CB-43B8-A18C-05CFCF57B6B6"
+                iconFile.set(project.file("src/main/resources/Logo.ico"))
             }
         }
     }
