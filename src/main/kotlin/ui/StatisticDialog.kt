@@ -647,7 +647,7 @@ fun generateStatisticsReport(
             appendLine("LAKSHMI MULTIPLEX")
             appendLine("Theatre Canteen")
             appendLine("Sales Statistics Report")
-            appendLine("=".repeat(32))
+            appendLine("=".repeat(49))
             appendLine("Period: $fromDateStr to $toDateStr")
             appendLine("Generated: ${java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"))}")
             appendLine()
@@ -667,17 +667,6 @@ fun generateStatisticsReport(
                 }
             }
             
-            if (dailyPayments.isNotEmpty()) {
-                appendLine("DAILY PAYMENT BREAKDOWN:")
-                appendLine("-".repeat(32))
-                dailyPayments.forEach { day ->
-                    appendLine("${day.date}:")
-                    appendLine("  Cash: ₹${day.cash.toInt()}")
-                    appendLine("  GPay: ₹${day.gpay.toInt()}")
-                    appendLine("  Total: ₹${day.total.toInt()}")
-                    appendLine()
-                }
-            }
             
             appendLine("OVERALL SUMMARY:")
             appendLine("-".repeat(32))
@@ -694,7 +683,6 @@ fun generateStatisticsReport(
         // Show success message
         println("✅ Statistics report generated successfully!")
         println("📄 PDF saved to Documents folder")
-        println("🖨️ Report sent to printer")
         
     } catch (e: Exception) {
         println("❌ Error generating statistics report: ${e.message}")
