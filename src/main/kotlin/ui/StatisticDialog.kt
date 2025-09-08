@@ -683,6 +683,7 @@ fun generateStatisticsReport(
         // Show success message
         println("✅ Statistics report generated successfully!")
         println("📄 PDF saved to Documents folder")
+        println("🖨️ Report sent to printer")
         
     } catch (e: Exception) {
         println("❌ Error generating statistics report: ${e.message}")

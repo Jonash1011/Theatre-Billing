@@ -358,16 +358,61 @@ object PdfBillGenerator {
         return cart.entries.sumOf { it.key.price * it.value }
     }
 
-    // Function to generate PDF statistics report (without printing)
+    // Function to generate PDF and print statistics report
     fun printStatisticsReport(report: String) {
         try {
-            // Generate and save PDF file only
+            // First, generate and save PDF file
             val pdfPath = generateStatisticsPdf(report)
             println("Statistics report PDF saved to: $pdfPath")
-            println("PDF generated successfully - no printing to physical printer")
+            
+            // Then print to printer
+            val printerJob = PrinterJob.getPrinterJob()
+
+            // Try to find a thermal printer
+            val printServices = PrintServiceLookup.lookupPrintServices(null, null)
+            var selectedPrinter: PrintService? = null
+
+            // Look for thermal printer or default printer
+            for (service in printServices) {
+                val name = service.name.lowercase()
+                if (name.contains("thermal") || name.contains("receipt") || name.contains("pos") || name.contains("tm-t82")) {
+                    selectedPrinter = service
+                    break
+                }
+            }
+
+            // If no thermal printer found, use default printer
+            if (selectedPrinter == null && printServices.isNotEmpty()) {
+                selectedPrinter = printServices[0]
+            }
+
+            if (selectedPrinter != null) {
+                printerJob.printService = selectedPrinter
+
+                // Set up page format for EPSON TM-T82X (79.5mm paper)
+                val pageFormat = printerJob.defaultPage()
+                pageFormat.setPaper(java.awt.print.Paper().apply {
+                    val width = 90.0 * 2.834645669 // 90mm in points for wider paper
+                    val height = 12.0 * 72.0 // 12 inches height for longer reports
+                    setSize(width, height)
+                    setImageableArea(25.0, 5.0, width - 35.0, height - 10.0)
+                })
+
+                printerJob.setPrintable(StatisticsReportPrintable(report), pageFormat)
+
+                // Print attributes
+                val attributes = HashPrintRequestAttributeSet()
+                attributes.add(Copies(1))
+                attributes.add(OrientationRequested.PORTRAIT)
+
+                printerJob.print(attributes)
+                println("Statistics report printed successfully on: ${selectedPrinter.name}")
+            } else {
+                println("No printer found. PDF saved to: $pdfPath")
+            }
 
         } catch (e: Exception) {
-            println("Error generating statistics report: ${e.message}")
+            println("Error generating/printing statistics report: ${e.message}")
             e.printStackTrace()
         }
     }
