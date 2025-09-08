@@ -16,9 +16,7 @@ data class Purchase(
 object PurchaseDao {
     private val conn: Connection = Database.connection
     init {
-        conn.createStatement().executeUpdate(
-            "CREATE TABLE IF NOT EXISTS purchase (id INTEGER PRIMARY KEY AUTOINCREMENT, productId INTEGER, quantity INTEGER, paymentMode TEXT, dateTime TEXT, FOREIGN KEY(productId) REFERENCES product(id))"
-        )
+        // Table is already created in Database.kt
     }
     fun add(purchase: Purchase) {
         val stmt = conn.prepareStatement("INSERT INTO purchase(productId, quantity, paymentMode, dateTime) VALUES (?, ?, ?, ?)")

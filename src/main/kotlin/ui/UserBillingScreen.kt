@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import org.example.data.ProductDao
 import org.example.data.Product
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.example.data.PurchaseDao
 import org.example.data.Purchase
 import org.example.util.PdfBillGenerator
@@ -307,7 +308,7 @@ fun UserBillingScreen(onBack: () -> Unit) {
             cart = cart,
             paymentMode = paymentMode,
             onConfirm = {
-                val now = LocalDateTime.now().toString()
+                val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 cart.forEach { (product, qty) ->
                     val newStock = product.stock - qty
                     productDao.update(product.copy(stock = newStock))

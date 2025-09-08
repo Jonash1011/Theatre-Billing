@@ -32,14 +32,17 @@ object Database {
             conn.createStatement().executeUpdate(
                 "CREATE TABLE IF NOT EXISTS product (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price REAL NOT NULL, stock INTEGER NOT NULL, categoryId INTEGER NOT NULL, FOREIGN KEY(categoryId) REFERENCES category(id))"
             )
-            conn.createStatement().executeUpdate(
-                "CREATE TABLE IF NOT EXISTS purchase (id INTEGER PRIMARY KEY AUTOINCREMENT, productId INTEGER, quantity INTEGER, price REAL, paymentMode TEXT, dateTime TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(productId) REFERENCES product(id))"
-            )
-            // Add missing columns to purchase table if they don't exist
-            try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN paymentMode TEXT") } catch (e: Exception) { println("paymentMode column: ${e.message}") }
-            try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN dateTime TEXT") } catch (e: Exception) { println("dateTime column: ${e.message}") }
-            try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN price REAL") } catch (e: Exception) { println("price column: ${e.message}") }
-            try { conn.createStatement().executeUpdate("ALTER TABLE purchase ADD COLUMN timestamp DATETIME DEFAULT CURRENT_TIMESTAMP") } catch (e: Exception) { println("timestamp column: ${e.message}") }
+            // Create purchase table with all required columns
+            conn.createStatement().executeUpdate("""
+                CREATE TABLE IF NOT EXISTS purchase (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    productId INTEGER NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    paymentMode TEXT NOT NULL,
+                    dateTime TEXT NOT NULL,
+                    FOREIGN KEY(productId) REFERENCES product(id)
+                )
+            """)
             
             // Create default admin user if no users exist
             try {
