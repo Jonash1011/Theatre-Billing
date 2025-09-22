@@ -24,6 +24,22 @@ import java.time.format.DateTimeFormatter
 import org.example.ui.theme.AppTheme
 import org.example.util.PdfBillGenerator
 
+// Utility function to parse different date formats consistently
+private fun parseDateTime(dateTimeStr: String): LocalDateTime {
+    return try {
+        // First try ISO format (with T separator and optional nanoseconds)
+        LocalDateTime.parse(dateTimeStr)
+    } catch (e: Exception) {
+        try {
+            // If that fails, try the simple format (yyyy-MM-dd HH:mm:ss)
+            LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        } catch (e2: Exception) {
+            // If both fail, try without seconds
+            LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        }
+    }
+}
+
 @Composable
 fun StatisticDialog(
     categories: List<Category>,
@@ -525,26 +541,19 @@ fun getCategoryStats(from: LocalDate, to: LocalDate, categories: List<Category>)
     
     println("Total purchases in DB: ${purchases.size}")
     
-    val startDateTime = from.atTime(6, 0, 0) // 6:00:00 AM on start date
-    val endDateTime = to.plusDays(1).atTime(5, 59, 59) // 5:59:59 AM next day
+    val startDateTime = from.atTime(6, 0)
+    val endDateTime = to.plusDays(1).atTime(5, 59)
     
     println("Start datetime: $startDateTime")
     println("End datetime: $endDateTime")
     
     val filteredPurchases = purchases.filter { purchase ->
         try {
-            // Parse ISO format date (handles the 'T' separator and optional nanoseconds)
-            val purchaseDateTime = LocalDateTime.parse(purchase.dateTime)
+            val purchaseDateTime = parseDateTime(purchase.dateTime)
             println("Purchase datetime: $purchaseDateTime for product ${purchase.productId}")
-            
-            // Include exact boundary times (6:00:00 AM and 5:59:59 AM)
-            val isInRange = (purchaseDateTime.isEqual(startDateTime) || purchaseDateTime.isAfter(startDateTime)) &&
-                          (purchaseDateTime.isEqual(endDateTime) || purchaseDateTime.isBefore(endDateTime))
-            
+            val isInRange = !purchaseDateTime.isBefore(startDateTime) && !purchaseDateTime.isAfter(endDateTime)
             if (isInRange) {
-                println("Purchase is in range: ${purchase.dateTime}")
-            } else {
-                println("Purchase outside range: ${purchase.dateTime}")
+                println("Purchase is in range")
             }
             isInRange
         } catch (e: Exception) {
@@ -584,25 +593,19 @@ fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat>
     
     val productDao = ProductDao()
     val products = productDao.getAll().associateBy { it.id }
-    val startDateTime = from.atTime(6, 0, 0) // 6:00:00 AM on start date
-    val endDateTime = to.plusDays(1).atTime(5, 59, 59) // 5:59:59 AM next day
+    val startDateTime = from.atTime(6, 0)
+    val endDateTime = to.plusDays(1).atTime(5, 59)
     
     println("Filtering purchases between $startDateTime and $endDateTime")
     
     val filtered = purchases.filter { purchase ->
         try {
-            // Parse ISO format date (handles the 'T' separator and optional nanoseconds)
-            val purchaseDateTime = LocalDateTime.parse(purchase.dateTime)
+            val purchaseDateTime = parseDateTime(purchase.dateTime)
             println("Checking purchase: ${purchase.dateTime} (${purchase.productId})")
             
-            // Include exact boundary times (6:00:00 AM and 5:59:59 AM)
-            val isInRange = (purchaseDateTime.isEqual(startDateTime) || purchaseDateTime.isAfter(startDateTime)) &&
-                          (purchaseDateTime.isEqual(endDateTime) || purchaseDateTime.isBefore(endDateTime))
-            
+            val isInRange = !purchaseDateTime.isBefore(startDateTime) && !purchaseDateTime.isAfter(endDateTime)
             if (isInRange) {
-                println("Purchase is in range: ${purchase.dateTime}")
-            } else {
-                println("Purchase outside range: ${purchase.dateTime}")
+                println("Purchase is in range!")
             }
             isInRange
         } catch (e: Exception) {
@@ -613,9 +616,9 @@ fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat>
     // Group by purchase date (calendar day), using the parsed LocalDateTime
     val grouped = filtered.groupBy { 
         try {
-            LocalDateTime.parse(it.dateTime).toLocalDate().toString()
+            parseDateTime(it.dateTime).toLocalDate().toString()
         } catch (e: Exception) {
-            // This shouldn't happen as we've already filtered invalid dates
+            // Fallback: extract date from string
             it.dateTime.substring(0, 10)
         }
     }
@@ -647,7 +650,7 @@ fun generateStatisticsReport(
             appendLine("LAKSHMI MULTIPLEX")
             appendLine("Theatre Canteen")
             appendLine("Sales Statistics Report")
-            appendLine("=".repeat(49))
+            appendLine("=".repeat(32))
             appendLine("Period: $fromDateStr to $toDateStr")
             appendLine("Generated: ${java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"))}")
             appendLine()
@@ -667,6 +670,17 @@ fun generateStatisticsReport(
                 }
             }
             
+            if (dailyPayments.isNotEmpty()) {
+                appendLine("DAILY PAYMENT BREAKDOWN:")
+                appendLine("-".repeat(32))
+                dailyPayments.forEach { day ->
+                    appendLine("${day.date}:")
+                    appendLine("  Cash: ₹${day.cash.toInt()}")
+                    appendLine("  GPay: ₹${day.gpay.toInt()}")
+                    appendLine("  Total: ₹${day.total.toInt()}")
+                    appendLine()
+                }
+            }
             
             appendLine("OVERALL SUMMARY:")
             appendLine("-".repeat(32))
