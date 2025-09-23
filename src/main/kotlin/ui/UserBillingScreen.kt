@@ -43,6 +43,9 @@ fun UserBillingScreen(onBack: () -> Unit) {
     var showBillDialog by remember { mutableStateOf(false) }
     val generateBillFocusRequester = remember { FocusRequester() }
     
+    // Track grand total for the session
+    var sessionGrandTotal by remember { mutableStateOf(0.0) }
+    
     // Function to handle bill generation
     fun generateBill() {
         if (cart.isNotEmpty()) {
@@ -289,6 +292,39 @@ fun UserBillingScreen(onBack: () -> Unit) {
                         Text("Generate Bill", fontWeight = FontWeight.Bold)
                     }
                     Spacer(Modifier.height(8.dp))
+                    
+                    // Session Grand Total Display
+                    if (sessionGrandTotal > 0) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = AppTheme.primaryColor.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "Session Total: ₹${sessionGrandTotal.toInt()}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppTheme.primaryColor
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                OutlinedButton(
+                                    onClick = { sessionGrandTotal = 0.0 },
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = AppTheme.accentColor
+                                    ),
+                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                ) {
+                                    Text("Reset Session", fontSize = 12.sp)
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    
                     OutlinedButton(
                         onClick = onBack, 
                         modifier = Modifier.fillMaxWidth(),
@@ -309,6 +345,8 @@ fun UserBillingScreen(onBack: () -> Unit) {
             paymentMode = paymentMode,
             onConfirm = {
                 val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                val currentBillTotal = cart.entries.sumOf { it.key.price * it.value }
+                
                 cart.forEach { (product, qty) ->
                     val newStock = product.stock - qty
                     productDao.update(product.copy(stock = newStock))
@@ -320,6 +358,13 @@ fun UserBillingScreen(onBack: () -> Unit) {
                     ))
                 }
                 PdfBillGenerator.generateBill(cart, paymentMode, null)
+                
+                // Add current bill total to session grand total
+                sessionGrandTotal += currentBillTotal
+                
+                // Print grand total summary
+                PdfBillGenerator.printGrandTotalSummary(sessionGrandTotal, paymentMode)
+                
                 cart.clear()
                 products = productDao.getAll() // Refresh product list to update stock
                 showBillDialog = false

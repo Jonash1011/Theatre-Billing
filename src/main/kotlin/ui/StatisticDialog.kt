@@ -24,6 +24,22 @@ import java.time.format.DateTimeFormatter
 import org.example.ui.theme.AppTheme
 import org.example.util.PdfBillGenerator
 
+// Utility function to parse different date formats consistently
+private fun parseDateTime(dateTimeStr: String): LocalDateTime {
+    return try {
+        // First try ISO format (with T separator and optional nanoseconds)
+        LocalDateTime.parse(dateTimeStr)
+    } catch (e: Exception) {
+        try {
+            // If that fails, try the simple format (yyyy-MM-dd HH:mm:ss)
+            LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        } catch (e2: Exception) {
+            // If both fail, try without seconds
+            LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        }
+    }
+}
+
 @Composable
 fun StatisticDialog(
     categories: List<Category>,
@@ -92,7 +108,7 @@ fun StatisticDialog(
                         )
                     }
                 }
-                
+
                 // Main content
                 Box(
                     modifier = Modifier
@@ -104,362 +120,362 @@ fun StatisticDialog(
                             .fillMaxSize(),
                         horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                // LEFT SIDE - Controls and Title
-                Column(
-                    modifier = Modifier
-                        .weight(0.35f) // 35% of width
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Title Section
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = 2.dp,
-                        backgroundColor = AppTheme.primaryColor,
-                        shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                    ) {
-                        Text(
-                            "Sales Statistics",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AppTheme.textOnPrimary,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                    
-                    // Date Inputs Section
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = 1.dp,
-                        backgroundColor = AppTheme.cardColor,
-                        shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                    ) {
+                        // LEFT SIDE - Controls and Title
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                "Select Date Range",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AppTheme.primaryColor
-                            )
-                            
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("From:", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                    OutlinedTextField(
-                                        value = fromDateStr,
-                                        onValueChange = {
-                                            fromDateStr = it
-                                            runCatching { fromDate = LocalDate.parse(it, formatter) }
-                                        },
-                                        label = { Text("YYYY-MM-DD") },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                                
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("To:", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                    OutlinedTextField(
-                                        value = toDateStr,
-                                        onValueChange = {
-                                            toDateStr = it
-                                            runCatching { toDate = LocalDate.parse(it, formatter) }
-                                        },
-                                        label = { Text("YYYY-MM-DD") },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Show Statistics Button
-                    Button(
-                        onClick = {
-                            stats = getCategoryStats(fromDate, toDate, categories)
-                            val payments = getDailyPaymentStats(fromDate, toDate)
-                            dailyPayments = payments
-                            overallCash = payments.sumOf { it.cash }
-                            overallGPay = payments.sumOf { it.gpay }
-                            overallTotal = payments.sumOf { it.total }
-                            showStats = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = AppTheme.accentColor,
-                            contentColor = AppTheme.textOnPrimary
-                        ),
-                        shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                    ) {
-                        Text("Show Statistics", fontWeight = FontWeight.Medium, fontSize = 16.sp)
-                    }
-                }
-                
-                // RIGHT SIDE - Statistics Results
-                Column(
-                    modifier = Modifier
-                        .weight(0.65f) // 65% of width
-                        .fillMaxHeight()
-                ) {
-                    // SCROLLABLE STATISTICS CONTENT
-                    if (showStats) {
-                        Card(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight()
-                                .border(
-                                    width = 1.dp,
-                                    color = AppTheme.primaryColor.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                ),
-                            elevation = 2.dp,
-                            backgroundColor = AppTheme.cardColor,
-                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                .weight(0.35f) // 35% of width
+                                .fillMaxHeight(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize()
+                            // Title Section
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                elevation = 2.dp,
+                                backgroundColor = AppTheme.primaryColor,
+                                shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                             ) {
-                                // Fixed header for scroll area
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = AppTheme.primaryColor.copy(alpha = 0.1f),
-                                    shape = RoundedCornerShape(
-                                        topStart = AppTheme.cornerRadius.dp,
-                                        topEnd = AppTheme.cornerRadius.dp
-                                    )
-                                ) {
-                                    Text(
-                                        "📊 Statistics Results",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = AppTheme.primaryColor,
-                                        modifier = Modifier.padding(12.dp)
-                                    )
-                                }
-                                
-                                // Scrollable content
+                                Text(
+                                    "Sales Statistics",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppTheme.textOnPrimary,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+
+                            // Date Inputs Section
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                elevation = 1.dp,
+                                backgroundColor = AppTheme.cardColor,
+                                shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                            ) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f)
-                                        .verticalScroll(scrollState)
-                                        .padding(16.dp),
+                                    modifier = Modifier.padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    if (stats.isEmpty() && dailyPayments.isEmpty()) {
-                                        Text(
-                                            "No sales found for selected dates.",
-                                            fontSize = 16.sp,
-                                            color = AppTheme.textSecondary,
-                                            modifier = Modifier.padding(20.dp)
-                                        )
-                                    } else {
-                                        // Category-wise statistics
-                                        if (stats.isNotEmpty()) {
-                                            stats.forEach { stat ->
-                                                Card(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    elevation = 1.dp,
-                                                    backgroundColor = AppTheme.surfaceColor,
-                                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                                ) {
-                                                    Column(modifier = Modifier.padding(12.dp)) {
-                                                        Text(
-                                                            "Category: ${stat.categoryName}", 
-                                                            fontSize = 16.sp, 
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = AppTheme.primaryColor
-                                                        )
-                                                        Spacer(Modifier.height(8.dp))
-                                                        stat.products.forEach { prod ->
+                                    Text(
+                                        "Select Date Range",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = AppTheme.primaryColor
+                                    )
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Text("From:", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                            OutlinedTextField(
+                                                value = fromDateStr,
+                                                onValueChange = {
+                                                    fromDateStr = it
+                                                    runCatching { fromDate = LocalDate.parse(it, formatter) }
+                                                },
+                                                label = { Text("YYYY-MM-DD") },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Text("To:", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                            OutlinedTextField(
+                                                value = toDateStr,
+                                                onValueChange = {
+                                                    toDateStr = it
+                                                    runCatching { toDate = LocalDate.parse(it, formatter) }
+                                                },
+                                                label = { Text("YYYY-MM-DD") },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Show Statistics Button
+                            Button(
+                                onClick = {
+                                    stats = getCategoryStats(fromDate, toDate, categories)
+                                    val payments = getDailyPaymentStats(fromDate, toDate)
+                                    dailyPayments = payments
+                                    overallCash = payments.sumOf { it.cash }
+                                    overallGPay = payments.sumOf { it.gpay }
+                                    overallTotal = payments.sumOf { it.total }
+                                    showStats = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    backgroundColor = AppTheme.accentColor,
+                                    contentColor = AppTheme.textOnPrimary
+                                ),
+                                shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                            ) {
+                                Text("Show Statistics", fontWeight = FontWeight.Medium, fontSize = 16.sp)
+                            }
+                        }
+
+                        // RIGHT SIDE - Statistics Results
+                        Column(
+                            modifier = Modifier
+                                .weight(0.65f) // 65% of width
+                                .fillMaxHeight()
+                        ) {
+                            // SCROLLABLE STATISTICS CONTENT
+                            if (showStats) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight()
+                                        .border(
+                                            width = 1.dp,
+                                            color = AppTheme.primaryColor.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                        ),
+                                    elevation = 2.dp,
+                                    backgroundColor = AppTheme.cardColor,
+                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        // Fixed header for scroll area
+                                        Surface(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            color = AppTheme.primaryColor.copy(alpha = 0.1f),
+                                            shape = RoundedCornerShape(
+                                                topStart = AppTheme.cornerRadius.dp,
+                                                topEnd = AppTheme.cornerRadius.dp
+                                            )
+                                        ) {
+                                            Text(
+                                                "📊 Statistics Results",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = AppTheme.primaryColor,
+                                                modifier = Modifier.padding(12.dp)
+                                            )
+                                        }
+
+                                        // Scrollable content
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f)
+                                                .verticalScroll(scrollState)
+                                                .padding(16.dp),
+                                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            if (stats.isEmpty() && dailyPayments.isEmpty()) {
+                                                Text(
+                                                    "No sales found for selected dates.",
+                                                    fontSize = 16.sp,
+                                                    color = AppTheme.textSecondary,
+                                                    modifier = Modifier.padding(20.dp)
+                                                )
+                                            } else {
+                                                // Category-wise statistics
+                                                if (stats.isNotEmpty()) {
+                                                    stats.forEach { stat ->
+                                                        Card(
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            elevation = 1.dp,
+                                                            backgroundColor = AppTheme.surfaceColor,
+                                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                        ) {
+                                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                                Text(
+                                                                    "Category: ${stat.categoryName}",
+                                                                    fontSize = 16.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = AppTheme.primaryColor
+                                                                )
+                                                                Spacer(Modifier.height(8.dp))
+                                                                stat.products.forEach { prod ->
+                                                                    Row(
+                                                                        modifier = Modifier.fillMaxWidth(),
+                                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                                    ) {
+                                                                        Text(
+                                                                            prod.name,
+                                                                            fontSize = 14.sp,
+                                                                            color = AppTheme.textPrimary,
+                                                                            modifier = Modifier.weight(1f)
+                                                                        )
+                                                                        Text(
+                                                                            "Sold: ${prod.soldQty} | ₹${prod.totalAmount}",
+                                                                            fontSize = 14.sp,
+                                                                            fontWeight = FontWeight.Medium,
+                                                                            color = AppTheme.accentColor
+                                                                        )
+                                                                    }
+                                                                    if (prod != stat.products.last()) {
+                                                                        Spacer(Modifier.height(4.dp))
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Spacer(Modifier.height(16.dp))
+                                                }
+
+                                                // Daily payment breakdown
+                                                if (dailyPayments.isNotEmpty()) {
+                                                    Text(
+                                                        "Daily Payment Breakdown:",
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = AppTheme.primaryColor
+                                                    )
+                                                    Spacer(Modifier.height(8.dp))
+
+                                                    dailyPayments.forEach { day ->
+                                                        Card(
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            elevation = 1.dp,
+                                                            backgroundColor = AppTheme.surfaceColor,
+                                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                        ) {
+                                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                                Text(
+                                                                    day.date,
+                                                                    fontSize = 14.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = AppTheme.textPrimary
+                                                                )
+                                                                Spacer(Modifier.height(4.dp))
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth(),
+                                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                                ) {
+                                                                    Text(
+                                                                        "Cash: ₹${day.cash}",
+                                                                        fontSize = 14.sp,
+                                                                        color = AppTheme.textSecondary
+                                                                    )
+                                                                    Text(
+                                                                        "GPay: ₹${day.gpay}",
+                                                                        fontSize = 14.sp,
+                                                                        color = AppTheme.textSecondary
+                                                                    )
+                                                                    Text(
+                                                                        "Total: ₹${day.total}",
+                                                                        fontSize = 14.sp,
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        color = AppTheme.accentColor
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Spacer(Modifier.height(16.dp))
+
+                                                    // Overall summary - highlighted
+                                                    Card(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        elevation = 4.dp,
+                                                        backgroundColor = AppTheme.primaryColor,
+                                                        shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                    ) {
+                                                        Column(modifier = Modifier.padding(16.dp)) {
+                                                            Text(
+                                                                "Overall Summary",
+                                                                fontSize = 16.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = AppTheme.textOnPrimary
+                                                            )
+                                                            Spacer(Modifier.height(8.dp))
                                                             Row(
                                                                 modifier = Modifier.fillMaxWidth(),
                                                                 horizontalArrangement = Arrangement.SpaceBetween
                                                             ) {
+                                                                Column {
+                                                                    Text(
+                                                                        "Cash: ₹$overallCash",
+                                                                        fontSize = 14.sp,
+                                                                        color = AppTheme.textOnPrimary
+                                                                    )
+                                                                    Text(
+                                                                        "GPay: ₹$overallGPay",
+                                                                        fontSize = 14.sp,
+                                                                        color = AppTheme.textOnPrimary
+                                                                    )
+                                                                }
                                                                 Text(
-                                                                    prod.name, 
-                                                                    fontSize = 14.sp,
-                                                                    color = AppTheme.textPrimary,
-                                                                    modifier = Modifier.weight(1f)
+                                                                    "Total: ₹$overallTotal",
+                                                                    fontSize = 18.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = AppTheme.textOnPrimary
                                                                 )
-                                                                Text(
-                                                                    "Sold: ${prod.soldQty} | ₹${prod.totalAmount}", 
-                                                                    fontSize = 14.sp,
-                                                                    fontWeight = FontWeight.Medium,
-                                                                    color = AppTheme.accentColor
-                                                                )
-                                                            }
-                                                            if (prod != stat.products.last()) {
-                                                                Spacer(Modifier.height(4.dp))
                                                             }
                                                         }
                                                     }
-                                                }
-                                            }
-                                            
-                                            Spacer(Modifier.height(16.dp))
-                                        }
-                                        
-                                        // Daily payment breakdown
-                                        if (dailyPayments.isNotEmpty()) {
-                                            Text(
-                                                "Daily Payment Breakdown:", 
-                                                fontSize = 16.sp, 
-                                                fontWeight = FontWeight.Bold,
-                                                color = AppTheme.primaryColor
-                                            )
-                                            Spacer(Modifier.height(8.dp))
-                                            
-                                            dailyPayments.forEach { day ->
-                                                Card(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    elevation = 1.dp,
-                                                    backgroundColor = AppTheme.surfaceColor,
-                                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                                ) {
-                                                    Column(modifier = Modifier.padding(12.dp)) {
-                                                        Text(
-                                                            day.date, 
-                                                            fontSize = 14.sp, 
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = AppTheme.textPrimary
-                                                        )
-                                                        Spacer(Modifier.height(4.dp))
-                                                        Row(
-                                                            modifier = Modifier.fillMaxWidth(),
-                                                            horizontalArrangement = Arrangement.SpaceBetween
-                                                        ) {
-                                                            Text(
-                                                                "Cash: ₹${day.cash}", 
-                                                                fontSize = 14.sp,
-                                                                color = AppTheme.textSecondary
-                                                            )
-                                                            Text(
-                                                                "GPay: ₹${day.gpay}", 
-                                                                fontSize = 14.sp,
-                                                                color = AppTheme.textSecondary
-                                                            )
-                                                            Text(
-                                                                "Total: ₹${day.total}", 
-                                                                fontSize = 14.sp,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = AppTheme.accentColor
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            
-                                            Spacer(Modifier.height(16.dp))
-                                            
-                                            // Overall summary - highlighted
-                                            Card(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                elevation = 4.dp,
-                                                backgroundColor = AppTheme.primaryColor,
-                                                shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                            ) {
-                                                Column(modifier = Modifier.padding(16.dp)) {
-                                                    Text(
-                                                        "Overall Summary", 
-                                                        fontSize = 16.sp, 
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = AppTheme.textOnPrimary
-                                                    )
-                                                    Spacer(Modifier.height(8.dp))
+
+                                                    Spacer(Modifier.height(16.dp))
+
+                                                    // Print and Cancel buttons below total summary
                                                     Row(
                                                         modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                                                     ) {
-                                                        Column {
-                                                            Text(
-                                                                "Cash: ₹$overallCash", 
-                                                                fontSize = 14.sp,
-                                                                color = AppTheme.textOnPrimary
-                                                            )
-                                                            Text(
-                                                                "GPay: ₹$overallGPay", 
-                                                                fontSize = 14.sp,
-                                                                color = AppTheme.textOnPrimary
-                                                            )
+                                                        Button(
+                                                            onClick = {
+                                                                generateStatisticsReport(stats, dailyPayments, overallCash, overallGPay, overallTotal, fromDate, toDate)
+                                                            },
+                                                            modifier = Modifier.weight(1f),
+                                                            colors = ButtonDefaults.buttonColors(
+                                                                backgroundColor = AppTheme.accentColor,
+                                                                contentColor = AppTheme.textOnPrimary
+                                                            ),
+                                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                        ) {
+                                                            Text("Print Report", fontWeight = FontWeight.Medium)
                                                         }
-                                                        Text(
-                                                            "Total: ₹$overallTotal", 
-                                                            fontSize = 18.sp,
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = AppTheme.textOnPrimary
-                                                        )
+
+                                                        Button(
+                                                            onClick = onDismiss,
+                                                            modifier = Modifier.weight(1f),
+                                                            colors = ButtonDefaults.buttonColors(
+                                                                backgroundColor = AppTheme.textSecondary,
+                                                                contentColor = AppTheme.textOnPrimary
+                                                            ),
+                                                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                                        ) {
+                                                            Text("Cancel", fontWeight = FontWeight.Medium)
+                                                        }
                                                     }
-                                                }
-                                            }
-                                            
-                                            Spacer(Modifier.height(16.dp))
-                                            
-                                            // Print and Cancel buttons below total summary
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
-                                                Button(
-                                                    onClick = {
-                                                        generateStatisticsReport(stats, dailyPayments, overallCash, overallGPay, overallTotal, fromDate, toDate)
-                                                    },
-                                                    modifier = Modifier.weight(1f),
-                                                    colors = ButtonDefaults.buttonColors(
-                                                        backgroundColor = AppTheme.accentColor,
-                                                        contentColor = AppTheme.textOnPrimary
-                                                    ),
-                                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                                ) {
-                                                    Text("Print Report", fontWeight = FontWeight.Medium)
-                                                }
-                                                
-                                                Button(
-                                                    onClick = onDismiss,
-                                                    modifier = Modifier.weight(1f),
-                                                    colors = ButtonDefaults.buttonColors(
-                                                        backgroundColor = AppTheme.textSecondary,
-                                                        contentColor = AppTheme.textOnPrimary
-                                                    ),
-                                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                                                ) {
-                                                    Text("Cancel", fontWeight = FontWeight.Medium)
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        }
-                    } else {
-                        // Placeholder when no stats are shown
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(),
-                            elevation = 1.dp,
-                            backgroundColor = AppTheme.surfaceColor.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = androidx.compose.ui.Alignment.Center
-                            ) {
-                                Text(
-                                    "Select dates and click 'Show Statistics' to view results",
-                                    fontSize = 14.sp,
-                                    color = AppTheme.textSecondary,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                            } else {
+                                // Placeholder when no stats are shown
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(),
+                                    elevation = 1.dp,
+                                    backgroundColor = AppTheme.surfaceColor.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = androidx.compose.ui.Alignment.Center
+                                    ) {
+                                        Text(
+                                            "Select dates and click 'Show Statistics' to view results",
+                                            fontSize = 14.sp,
+                                            color = AppTheme.textSecondary,
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-                    }
                 }
-                }
-                
+
                 // Bottom buttons
                 Row(
                     modifier = Modifier
@@ -477,8 +493,8 @@ fun StatisticDialog(
                                 contentColor = AppTheme.textOnPrimary
                             ),
                             shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                        ) { 
-                            Text("Print", fontWeight = FontWeight.Medium) 
+                        ) {
+                            Text("Print", fontWeight = FontWeight.Medium)
                         }
                     }
                     Button(
@@ -488,8 +504,8 @@ fun StatisticDialog(
                             contentColor = AppTheme.textOnPrimary
                         ),
                         shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
-                    ) { 
-                        Text("Close", fontWeight = FontWeight.Medium) 
+                    ) {
+                        Text("Close", fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -518,33 +534,26 @@ data class DailyPaymentStat(
 // Helper function for category stats
 fun getCategoryStats(from: LocalDate, to: LocalDate, categories: List<Category>): List<CategoryStat> {
     println("Getting stats from ${from} 6:00 AM to ${to.plusDays(1)} 5:59 AM")
-    
+
     val productDao = ProductDao()
     val products = productDao.getAll()
     val purchases = PurchaseDao.getAll()
-    
+
     println("Total purchases in DB: ${purchases.size}")
-    
-    val startDateTime = from.atTime(6, 0, 0) // 6:00:00 AM on start date
-    val endDateTime = to.plusDays(1).atTime(5, 59, 59) // 5:59:59 AM next day
-    
+
+    val startDateTime = from.atTime(6, 0)
+    val endDateTime = to.plusDays(1).atTime(5, 59)
+
     println("Start datetime: $startDateTime")
     println("End datetime: $endDateTime")
-    
+
     val filteredPurchases = purchases.filter { purchase ->
         try {
-            // Parse ISO format date (handles the 'T' separator and optional nanoseconds)
-            val purchaseDateTime = LocalDateTime.parse(purchase.dateTime)
+            val purchaseDateTime = parseDateTime(purchase.dateTime)
             println("Purchase datetime: $purchaseDateTime for product ${purchase.productId}")
-            
-            // Include exact boundary times (6:00:00 AM and 5:59:59 AM)
-            val isInRange = (purchaseDateTime.isEqual(startDateTime) || purchaseDateTime.isAfter(startDateTime)) &&
-                          (purchaseDateTime.isEqual(endDateTime) || purchaseDateTime.isBefore(endDateTime))
-            
+            val isInRange = !purchaseDateTime.isBefore(startDateTime) && !purchaseDateTime.isAfter(endDateTime)
             if (isInRange) {
-                println("Purchase is in range: ${purchase.dateTime}")
-            } else {
-                println("Purchase outside range: ${purchase.dateTime}")
+                println("Purchase is in range")
             }
             isInRange
         } catch (e: Exception) {
@@ -568,7 +577,7 @@ fun getCategoryStats(from: LocalDate, to: LocalDate, categories: List<Category>)
 fun getLatestSalesDate(): LocalDate? {
     val purchases = PurchaseDao.getAll()
     if (purchases.isEmpty()) return null
-    
+
     val latestDateTime = purchases.maxOfOrNull { it.dateTime }
     return if (latestDateTime != null) {
         LocalDate.parse(latestDateTime.substring(0, 10))
@@ -578,31 +587,25 @@ fun getLatestSalesDate(): LocalDate? {
 // Helper function for daily payment stats
 fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat> {
     println("Getting payment stats for date range: $from to $to")
-    
+
     val purchases = PurchaseDao.getAll()
     println("Total purchases found: ${purchases.size}")
-    
+
     val productDao = ProductDao()
     val products = productDao.getAll().associateBy { it.id }
-    val startDateTime = from.atTime(6, 0, 0) // 6:00:00 AM on start date
-    val endDateTime = to.plusDays(1).atTime(5, 59, 59) // 5:59:59 AM next day
-    
+    val startDateTime = from.atTime(6, 0)
+    val endDateTime = to.plusDays(1).atTime(5, 59)
+
     println("Filtering purchases between $startDateTime and $endDateTime")
-    
+
     val filtered = purchases.filter { purchase ->
         try {
-            // Parse ISO format date (handles the 'T' separator and optional nanoseconds)
-            val purchaseDateTime = LocalDateTime.parse(purchase.dateTime)
+            val purchaseDateTime = parseDateTime(purchase.dateTime)
             println("Checking purchase: ${purchase.dateTime} (${purchase.productId})")
-            
-            // Include exact boundary times (6:00:00 AM and 5:59:59 AM)
-            val isInRange = (purchaseDateTime.isEqual(startDateTime) || purchaseDateTime.isAfter(startDateTime)) &&
-                          (purchaseDateTime.isEqual(endDateTime) || purchaseDateTime.isBefore(endDateTime))
-            
+
+            val isInRange = !purchaseDateTime.isBefore(startDateTime) && !purchaseDateTime.isAfter(endDateTime)
             if (isInRange) {
-                println("Purchase is in range: ${purchase.dateTime}")
-            } else {
-                println("Purchase outside range: ${purchase.dateTime}")
+                println("Purchase is in range!")
             }
             isInRange
         } catch (e: Exception) {
@@ -611,11 +614,11 @@ fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat>
         }
     }
     // Group by purchase date (calendar day), using the parsed LocalDateTime
-    val grouped = filtered.groupBy { 
+    val grouped = filtered.groupBy {
         try {
-            LocalDateTime.parse(it.dateTime).toLocalDate().toString()
+            parseDateTime(it.dateTime).toLocalDate().toString()
         } catch (e: Exception) {
-            // This shouldn't happen as we've already filtered invalid dates
+            // Fallback: extract date from string
             it.dateTime.substring(0, 10)
         }
     }
@@ -641,17 +644,17 @@ fun generateStatisticsReport(
         val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
         val fromDateStr = fromDate.format(formatter)
         val toDateStr = toDate.format(formatter)
-        
+
         // Create a bill-style text report
         val report = buildString {
             appendLine("LAKSHMI MULTIPLEX")
             appendLine("Theatre Canteen")
             appendLine("Sales Statistics Report")
-            appendLine("=".repeat(49))
+            appendLine("=".repeat(32))
             appendLine("Period: $fromDateStr to $toDateStr")
             appendLine("Generated: ${java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"))}")
             appendLine()
-            
+
             if (stats.isNotEmpty()) {
                 appendLine("CATEGORY WISE SALES:")
                 appendLine("-".repeat(32))
@@ -666,8 +669,19 @@ fun generateStatisticsReport(
                     appendLine()
                 }
             }
-            
-            
+
+            if (dailyPayments.isNotEmpty()) {
+                appendLine("DAILY PAYMENT BREAKDOWN:")
+                appendLine("-".repeat(32))
+                dailyPayments.forEach { day ->
+                    appendLine("${day.date}:")
+                    appendLine("  Cash: ₹${day.cash.toInt()}")
+                    appendLine("  GPay: ₹${day.gpay.toInt()}")
+                    appendLine("  Total: ₹${day.total.toInt()}")
+                    appendLine()
+                }
+            }
+
             appendLine("OVERALL SUMMARY:")
             appendLine("-".repeat(32))
             appendLine("Total Cash: ₹${overallCash.toInt()}")
@@ -676,15 +690,15 @@ fun generateStatisticsReport(
             appendLine()
             appendLine("Thank you!")
         }
-        
+
         // Generate PDF and print the report
         PdfBillGenerator.printStatisticsReport(report)
-        
+
         // Show success message
         println("✅ Statistics report generated successfully!")
         println("📄 PDF saved to Documents folder")
         println("🖨️ Report sent to printer")
-        
+
     } catch (e: Exception) {
         println("❌ Error generating statistics report: ${e.message}")
         e.printStackTrace()
