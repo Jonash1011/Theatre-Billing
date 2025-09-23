@@ -595,14 +595,12 @@ fun getDailyPaymentStats(from: LocalDate, to: LocalDate): List<DailyPaymentStat>
     val products = productDao.getAll().associateBy { it.id }
     val startDateTime = from.atTime(6, 0)
     val endDateTime = to.plusDays(1).atTime(5, 59)
-
     println("Filtering purchases between $startDateTime and $endDateTime")
 
     val filtered = purchases.filter { purchase ->
         try {
             val purchaseDateTime = parseDateTime(purchase.dateTime)
             println("Checking purchase: ${purchase.dateTime} (${purchase.productId})")
-
             val isInRange = !purchaseDateTime.isBefore(startDateTime) && !purchaseDateTime.isAfter(endDateTime)
             if (isInRange) {
                 println("Purchase is in range!")
@@ -669,7 +667,6 @@ fun generateStatisticsReport(
                     appendLine()
                 }
             }
-
             if (dailyPayments.isNotEmpty()) {
                 appendLine("DAILY PAYMENT BREAKDOWN:")
                 appendLine("-".repeat(32))
@@ -681,7 +678,6 @@ fun generateStatisticsReport(
                     appendLine()
                 }
             }
-
             appendLine("OVERALL SUMMARY:")
             appendLine("-".repeat(32))
             appendLine("Total Cash: ₹${overallCash.toInt()}")
