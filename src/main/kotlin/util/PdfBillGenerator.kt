@@ -371,7 +371,7 @@ object PdfBillGenerator {
                 appendLine("=".repeat(32))
                 appendLine("Payment Mode: $paymentMode")
                 appendLine()
-                appendLine("SESSION GRAND TOTAL:")
+                appendLine("GRAND TOTAL:")
                 appendLine("-".repeat(20))
                 appendLine("TOTAL: ₹${grandTotal.toInt()}")
                 appendLine()
@@ -628,7 +628,7 @@ object PdfBillGenerator {
                         val infoPara = Paragraph(line, infoFont)
                         document.add(infoPara)
                     }
-                    line.contains("SESSION GRAND TOTAL:") -> {
+                    line.contains("GRAND TOTAL:") -> {
                         val headerFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
                         val headerPara = Paragraph(line, headerFont)
                         document.add(headerPara)
@@ -711,7 +711,7 @@ object PdfBillGenerator {
                     line.contains("Payment Mode:") -> {
                         drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
                     }
-                    line.contains("SESSION GRAND TOTAL:") -> {
+                    line.contains("GRAND TOTAL:") -> {
                         drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
                     }
                     line.contains("TOTAL:") -> {
