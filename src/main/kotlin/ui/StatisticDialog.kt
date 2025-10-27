@@ -296,13 +296,13 @@ fun StatisticDialog(
                                                                     ) {
                                                                         Text(
                                                                             prod.name,
-                                                                            fontSize = 14.sp,
+                                                                            fontSize = 16.sp, // Increased from 14.sp
                                                                             color = AppTheme.textPrimary,
                                                                             modifier = Modifier.weight(1f)
                                                                         )
                                                                         Text(
                                                                             "Sold: ${prod.soldQty} | ₹${prod.totalAmount}",
-                                                                            fontSize = 14.sp,
+                                                                            fontSize = 16.sp, // Increased from 14.sp
                                                                             fontWeight = FontWeight.Medium,
                                                                             color = AppTheme.accentColor
                                                                         )
@@ -322,7 +322,7 @@ fun StatisticDialog(
                                                 if (dailyPayments.isNotEmpty()) {
                                                     Text(
                                                         "Daily Payment Breakdown:",
-                                                        fontSize = 16.sp,
+                                                        fontSize = 18.sp, // Increased from 16.sp
                                                         fontWeight = FontWeight.Bold,
                                                         color = AppTheme.primaryColor
                                                     )
@@ -338,7 +338,7 @@ fun StatisticDialog(
                                                             Column(modifier = Modifier.padding(12.dp)) {
                                                                 Text(
                                                                     day.date,
-                                                                    fontSize = 14.sp,
+                                                                    fontSize = 16.sp, // Increased from 14.sp
                                                                     fontWeight = FontWeight.Bold,
                                                                     color = AppTheme.textPrimary
                                                                 )
@@ -349,17 +349,17 @@ fun StatisticDialog(
                                                                 ) {
                                                                     Text(
                                                                         "Cash: ₹${day.cash}",
-                                                                        fontSize = 14.sp,
+                                                                        fontSize = 16.sp, // Increased from 14.sp
                                                                         color = AppTheme.textSecondary
                                                                     )
                                                                     Text(
                                                                         "GPay: ₹${day.gpay}",
-                                                                        fontSize = 14.sp,
+                                                                        fontSize = 16.sp, // Increased from 14.sp
                                                                         color = AppTheme.textSecondary
                                                                     )
                                                                     Text(
                                                                         "Total: ₹${day.total}",
-                                                                        fontSize = 14.sp,
+                                                                        fontSize = 16.sp, // Increased from 14.sp
                                                                         fontWeight = FontWeight.Bold,
                                                                         color = AppTheme.accentColor
                                                                     )
@@ -380,7 +380,7 @@ fun StatisticDialog(
                                                         Column(modifier = Modifier.padding(16.dp)) {
                                                             Text(
                                                                 "Overall Summary",
-                                                                fontSize = 16.sp,
+                                                                fontSize = 18.sp, // Increased from 16.sp
                                                                 fontWeight = FontWeight.Bold,
                                                                 color = AppTheme.textOnPrimary
                                                             )
@@ -392,18 +392,18 @@ fun StatisticDialog(
                                                                 Column {
                                                                     Text(
                                                                         "Cash: ₹$overallCash",
-                                                                        fontSize = 14.sp,
+                                                                        fontSize = 16.sp, // Increased from 14.sp
                                                                         color = AppTheme.textOnPrimary
                                                                     )
                                                                     Text(
                                                                         "GPay: ₹$overallGPay",
-                                                                        fontSize = 14.sp,
+                                                                        fontSize = 16.sp, // Increased from 14.sp
                                                                         color = AppTheme.textOnPrimary
                                                                     )
                                                                 }
                                                                 Text(
                                                                     "Total: ₹$overallTotal",
-                                                                    fontSize = 18.sp,
+                                                                    fontSize = 20.sp, // Increased from 18.sp
                                                                     fontWeight = FontWeight.Bold,
                                                                     color = AppTheme.textOnPrimary
                                                                 )
@@ -429,7 +429,7 @@ fun StatisticDialog(
                                                             ),
                                                             shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                                                         ) {
-                                                            Text("Print Report", fontWeight = FontWeight.Medium)
+                                                            Text("Print Report", fontWeight = FontWeight.Medium, fontSize = 16.sp)
                                                         }
 
                                                         Button(
@@ -441,7 +441,7 @@ fun StatisticDialog(
                                                             ),
                                                             shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                                                         ) {
-                                                            Text("Cancel", fontWeight = FontWeight.Medium)
+                                                            Text("Cancel", fontWeight = FontWeight.Medium, fontSize = 16.sp)
                                                         }
                                                     }
                                                 }
@@ -465,7 +465,7 @@ fun StatisticDialog(
                                     ) {
                                         Text(
                                             "Select dates and click 'Show Statistics' to view results",
-                                            fontSize = 14.sp,
+                                            fontSize = 16.sp, // Increased from 14.sp
                                             color = AppTheme.textSecondary,
                                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                         )
@@ -494,7 +494,7 @@ fun StatisticDialog(
                             ),
                             shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                         ) {
-                            Text("Print", fontWeight = FontWeight.Medium)
+                            Text("Print", fontWeight = FontWeight.Medium, fontSize = 16.sp)
                         }
                     }
                     Button(
@@ -505,7 +505,7 @@ fun StatisticDialog(
                         ),
                         shape = RoundedCornerShape(AppTheme.cornerRadius.dp)
                     ) {
-                        Text("Close", fontWeight = FontWeight.Medium)
+                        Text("Close", fontWeight = FontWeight.Medium, fontSize = 16.sp)
                     }
                 }
             }
@@ -645,8 +645,7 @@ fun generateStatisticsReport(
 
         // Create a bill-style text report
         val report = buildString {
-            appendLine("LAKSHMI MULTIPLEX")
-            appendLine("Theatre Canteen")
+            appendLine("THEATRE CANTEEN")
             appendLine("Sales Statistics Report")
             appendLine("=".repeat(32))
             appendLine("Period: $fromDateStr to $toDateStr")
@@ -658,6 +657,10 @@ fun generateStatisticsReport(
                 appendLine("-".repeat(32))
                 stats.forEach { stat ->
                     appendLine("Category: ${stat.categoryName}")
+                    // Column headers with larger font
+                    val headerPadding = "Item".padEnd(15)
+                    appendLine("$headerPadding Qty  Amount")
+                    appendLine("-".repeat(32))
                     stat.products.forEach { prod ->
                         val itemName = if (prod.name.length > 15) prod.name.substring(0, 15) else prod.name.padEnd(15)
                         val qtyStr = prod.soldQty.toString().padStart(3)

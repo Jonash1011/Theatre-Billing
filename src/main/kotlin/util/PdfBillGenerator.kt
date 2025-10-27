@@ -76,7 +76,7 @@ object PdfBillGenerator {
 
             // Title
             val titleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 10f, com.lowagie.text.Font.BOLD)
-            val titlePara = Paragraph("LAKSHMI MULTIPLEX", titleFont)
+            val titlePara = Paragraph("THEATRE CANTEEN", titleFont)
             titlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
             document.add(titlePara)
 
@@ -86,10 +86,6 @@ object PdfBillGenerator {
                 categoryPara.alignment = com.lowagie.text.Element.ALIGN_CENTER
                 document.add(categoryPara)
             }
-
-            val subtitlePara = Paragraph("Theatre Canteen", com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD))
-            subtitlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
-            document.add(subtitlePara)
 
             document.add(Paragraph(" "))
 
@@ -283,10 +279,7 @@ object PdfBillGenerator {
             }
 
             // Header
-            drawCenteredText("LAKSHMI MULTIPLEX", Font("Monospaced", Font.BOLD, 14), y)
-            y += lineHeight
-
-            drawCenteredText("Theatre Canteen", Font("Monospaced", Font.BOLD, 11), y)
+            drawCenteredText("THEATRE CANTEEN", Font("Monospaced", Font.BOLD, 14), y)
             y += lineHeight
 
             // Add category name if available
@@ -512,17 +505,11 @@ object PdfBillGenerator {
             
             lines.forEach { line ->
                 when {
-                    line.contains("LAKSHMI MULTIPLEX") -> {
+                    line.contains("THEATRE CANTEEN") -> {
                         val titleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 10f, com.lowagie.text.Font.BOLD)
                         val titlePara = Paragraph(line, titleFont)
                         titlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
                         document.add(titlePara)
-                    }
-                    line.contains("Theatre Canteen") -> {
-                        val subtitleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
-                        val subtitlePara = Paragraph(line, subtitleFont)
-                        subtitlePara.alignment = com.lowagie.text.Element.ALIGN_CENTER
-                        document.add(subtitlePara)
                     }
                     line.contains("Sales Statistics Report") -> {
                         val reportTitleFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
@@ -546,9 +533,15 @@ object PdfBillGenerator {
                         document.add(infoPara)
                     }
                     line.contains("Category:") -> {
-                        val categoryFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
+                        val categoryFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 10f, com.lowagie.text.Font.BOLD)
                         val categoryPara = Paragraph(line, categoryFont)
                         document.add(categoryPara)
+                    }
+                    line.matches(Regex(".*Item.*Qty.*Amount.*")) -> {
+                        // Column headers with larger font
+                        val headerFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 10f, com.lowagie.text.Font.BOLD)
+                        val headerPara = Paragraph(line, headerFont)
+                        document.add(headerPara)
                     }
                     line.contains("OVERALL SUMMARY:") || line.contains("DAILY PAYMENT BREAKDOWN:") -> {
                         val headerFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
@@ -769,11 +762,8 @@ object PdfBillGenerator {
             val lines = report.split("\n")
             lines.forEach { line ->
                 when {
-                    line.contains("LAKSHMI MULTIPLEX") -> {
+                    line.contains("THEATRE CANTEEN") -> {
                         drawCenteredText(line, Font("Monospaced", Font.BOLD, 14), y)
-                    }
-                    line.contains("Theatre Canteen") -> {
-                        drawCenteredText(line, Font("Monospaced", Font.BOLD, 11), y)
                     }
                     line.contains("Sales Statistics Report") -> {
                         drawCenteredText(line, Font("Monospaced", Font.BOLD, 11), y)
@@ -788,7 +778,11 @@ object PdfBillGenerator {
                         drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
                     }
                     line.contains("Category:") -> {
-                        drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 11), y)
+                    }
+                    line.matches(Regex(".*Item.*Qty.*Amount.*")) -> {
+
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 12), y)
                     }
                     line.contains("OVERALL SUMMARY:") || line.contains("DAILY PAYMENT BREAKDOWN:") -> {
                         drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
