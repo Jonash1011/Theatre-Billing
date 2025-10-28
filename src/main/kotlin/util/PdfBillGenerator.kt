@@ -111,7 +111,7 @@ object PdfBillGenerator {
             document.add(separator)
 
             // Column headers
-            val columnHeaderFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.NORMAL)
+            val columnHeaderFont = com.lowagie.text.Font(com.lowagie.text.Font.COURIER, 8f, com.lowagie.text.Font.BOLD)
             val columnHeaderText = "Item          Qty  Rate    Amount"
             val columnHeader = Paragraph(columnHeaderText, columnHeaderFont)
             columnHeader.alignment = com.lowagie.text.Element.ALIGN_LEFT
@@ -782,7 +782,7 @@ object PdfBillGenerator {
                     }
                     line.matches(Regex(".*Item.*Qty.*Amount.*")) -> {
 
-                        drawLeftText(line, Font("Monospaced", Font.BOLD, 12), y)
+                        drawLeftText(line, Font("Monospaced", Font.BOLD, 13), y)
                     }
                     line.contains("OVERALL SUMMARY:") || line.contains("DAILY PAYMENT BREAKDOWN:") -> {
                         drawLeftText(line, Font("Monospaced", Font.BOLD, 10), y)
